@@ -1,12 +1,23 @@
 import { Contract, ethers } from "ethers";
+import readline from "readline"
 
 const compiledContractInterface = require('./artifacts/Library.json')
 
-async function run() {
-    //make sure proper local node params are set!
-    let networkUrl: string = 'http://127.0.0.1:8545';
-    let contractAddress: string = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-    let walletPk: string = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+export async function run() {
+    let networkUrl: string;
+    let contractAddress: string;
+    let walletPk: string;
+
+    type promptCallback = (answer: string) => void;
+    
+    //use prompt to get all needed params
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const prompt = (query : string) => new Promise((resolve : promptCallback) => rl.question(query,  resolve));
+
+    networkUrl = (await prompt("Enter network url: ")) || "";
+    contractAddress = (await prompt("Enter contract address: ") || "");
+    walletPk = (await prompt("Enter wallet privet key: ")) || "";
+
 
     const provider = new ethers.JsonRpcProvider(networkUrl);
     const wallet = new ethers.Wallet(walletPk, provider);
@@ -72,7 +83,9 @@ async function run() {
     await showAvailableBooks(contract);
     printSeparator();
 
-}
+    rl.close();
+    rl.on('close', () => process.exit(0));
+}http://127.0.0.1:8545
 
 function printSeparator() {
     console.log('------------------------------------------------------------------------')
