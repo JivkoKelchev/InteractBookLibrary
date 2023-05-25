@@ -1,4 +1,4 @@
-import run from "./interact"
+import run from "./run"
 import readline from "readline";
 import {ethers} from "ethers";
 const compiledContractInterface = require('./artifacts/Library.json')
@@ -63,11 +63,6 @@ async function interact() {
     
 }
 
-interact().catch((error) => {
-    console.error(error);
-    process.exit(1);
-})
-
 function validateInputAddresses(address: string) {
     return (/^(0x){1}[0-9a-fA-F]{40}$/i.test(address));
 }
@@ -75,3 +70,8 @@ function validateInputAddresses(address: string) {
 function validateInputPK(pk: string) {
     return (/^(0x){1}[0-9a-fA-F]{64}$/i.test(pk));
 }
+
+interact().catch((error) => {
+    console.error(error);
+    process.exit(1);
+})
