@@ -1,36 +1,7 @@
-import { Contract, ethers } from "ethers";
-import readline from "readline"
+import {Contract, ethers, JsonRpcProvider, Wallet} from "ethers";
 
-const compiledContractInterface = require('./artifacts/Library.json')
-
-async function run() {
-    let networkUrl: string;
-    let contractAddress: string;
-    let walletPk: string;
-
-    type promptCallback = (answer: string) => void;
+export default async function run(provider : JsonRpcProvider, contract: Contract, wallet: Wallet) {
     
-    //use prompt to get all needed params
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    const prompt = (query : string) => new Promise((resolve : promptCallback) => rl.question(query,  resolve));
-
-    networkUrl = (await prompt("Enter network url: ")) || "";
-    contractAddress = (await prompt("Enter contract address: ") || "");
-    walletPk = (await prompt("Enter wallet privet key: ")) || "";
-
-
-    const provider = new ethers.JsonRpcProvider(networkUrl);
-    const wallet = new ethers.Wallet(walletPk, provider);
-    const contract = new ethers.Contract(contractAddress, compiledContractInterface.abi, wallet);
-    if(!ethers.isAddress(contractAddress)) {
-        console.log('Error: contractAddress is not valid.');
-        process.exitCode = 1;
-    }
-    if(!ethers.isAddress(wallet.address)) {
-        console.log('Error wallet address is not valid');
-        process.exitCode = 1;
-    }
-
     //print wallet info
     printSeparator();
     const balance = await provider.getBalance(wallet.address);
@@ -82,9 +53,6 @@ async function run() {
     printSeparator();
     await showAvailableBooks(contract);
     printSeparator();
-
-    rl.close();
-    rl.on('close', () => process.exit(0));
 }
 
 function printSeparator() {
@@ -132,9 +100,3 @@ function stopSpinner(interval: NodeJS.Timeout): void {
     clearInterval(interval);
     process.stdout.write('\rDone!                           \n'); // Clear the spinner line
 }
-
-console.log('Arguments:', process.argv.slice(2));
-run().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-});
