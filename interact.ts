@@ -3,7 +3,7 @@ import readline from "readline"
 
 const compiledContractInterface = require('./artifacts/Library.json')
 
-export async function run() {
+async function run() {
     let networkUrl: string;
     let contractAddress: string;
     let walletPk: string;
@@ -85,7 +85,7 @@ export async function run() {
 
     rl.close();
     rl.on('close', () => process.exit(0));
-}http://127.0.0.1:8545
+}
 
 function printSeparator() {
     console.log('------------------------------------------------------------------------')
