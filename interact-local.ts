@@ -8,67 +8,41 @@ async function interact() {
 
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const prompt = (query : string) => new Promise((resolve : promptCallback) => rl.question(query,  resolve));
-    let networkUrl: string = "";
+   
     let contractAddress: string = "";
-    let walletPk: string = "";
-    let validUrl: boolean = false;
+    let accountAddress: string = "";
     let validContractAddress: boolean = false;
-    let validWalletPk: boolean = false;
-
-    //validate url
-    while(!validUrl) {
-        networkUrl = await prompt("Enter network url: ");
-        if(networkUrl.startsWith("http://")) {
-            validUrl = true;
-        } else {
-            console.log("Bad url!")
-        }
-    }   
+    let validAccountAddress: boolean = false;
+    
     //validate contract address
     while (!validContractAddress) {
         contractAddress = (await prompt("Enter contract address: ") || "");
-        if(validateInputAddresses(contractAddress)) {
+        if(ethers.isAddress(contractAddress)) {
             validContractAddress = true;
         }else{
             console.log("Bad address format!")
         }
     }
-    //validate wallet pk
-    while (!validWalletPk) {
-        walletPk = (await prompt("Enter wallet privet key: ")) || "";
-        if(validateInputPK(walletPk)){
-            validWalletPk = true;
+    //validate account address
+    while (!validAccountAddress) {
+        accountAddress = (await prompt("Enter wallet privet key: ")) || "";
+        if(ethers.isAddress(accountAddress)){
+            validAccountAddress = true;
         }else{
             console.log("Bad private key format!");
         }
     }
 
-    const provider = new ethers.JsonRpcProvider(networkUrl);
-    const wallet = new ethers.Wallet(walletPk, provider);
-    const contract = new ethers.Contract(contractAddress, compiledContractInterface.abi, wallet);
-
-    if(!ethers.isAddress(contractAddress)) {
-        console.log('Error: contractAddress is not valid.');
-        process.exitCode = 1;
-    }
-    if(!ethers.isAddress(wallet.address)) {
-        console.log('Error wallet address is not valid');
-        process.exitCode = 1;
-    }
+    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545/");
+    const signer = await provider.getSigner(accountAddress);
+    const contract = new ethers.Contract(contractAddress, compiledContractInterface.abi, signer);
     
-    await run(provider, contract, wallet)
+    //run main script
+    await run(provider, contract, signer)
 
-    rl.close();
     rl.on('close', () => process.exit(0));
+    rl.close();
     
-}
-
-function validateInputAddresses(address: string) {
-    return (/^(0x){1}[0-9a-fA-F]{40}$/i.test(address));
-}
-
-function validateInputPK(pk: string) {
-    return (/^(0x){1}[0-9a-fA-F]{64}$/i.test(pk));
 }
 
 interact().catch((error) => {

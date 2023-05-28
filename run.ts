@@ -1,12 +1,13 @@
-import {Contract, ethers, JsonRpcProvider, Wallet} from "ethers";
+import {Contract, ethers, Provider, Signer} from "ethers";
 
-export default async function run(provider : JsonRpcProvider, contract: Contract, wallet: Wallet) {
+export default async function run(provider : Provider, contract: Contract, signer: Signer) {
     
     //print wallet info
     printSeparator();
-    const balance = await provider.getBalance(wallet.address);
+    const signerAddress = await signer.getAddress();
+    const balance = await provider.getBalance(signerAddress);
     const roundedBalance = parseFloat(ethers.formatEther(balance)).toFixed(4);
-    console.log(`Connected : ${wallet.address}`);
+    console.log(`Connected : ${signerAddress}`);
     console.log(`Balance   : ${roundedBalance} ETH`);
 
     //print total books info
@@ -39,7 +40,7 @@ export default async function run(provider : JsonRpcProvider, contract: Contract
     
     //print users current books
     printSeparator();
-    let currentBooks: string[] = await showUserCurrentBooks(contract, wallet.address);
+    let currentBooks: string[] = await showUserCurrentBooks(contract, signerAddress);
     
     //return book
     printSeparator()
