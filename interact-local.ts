@@ -25,11 +25,11 @@ async function interact() {
     }
     //validate account address
     while (!validAccountAddress) {
-        accountAddress = (await prompt("Enter wallet privet key: ")) || "";
+        accountAddress = (await prompt("Enter wallet address: ")) || "";
         if(ethers.isAddress(accountAddress)){
             validAccountAddress = true;
         }else{
-            console.log("Bad private key format!");
+            console.log("Bad address format!");
         }
     }
 

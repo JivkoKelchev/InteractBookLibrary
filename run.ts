@@ -1,58 +1,55 @@
-import {Contract, ethers, Provider, Signer} from "ethers";
+import {Contract, Provider, Signer} from "ethers";
+import {Sdk} from "./sdk";
 
 export default async function run(provider : Provider, contract: Contract, signer: Signer) {
-    
+    const sdk = new Sdk(provider, contract, signer);
+    const signerAddress = await sdk.getSignerAddress();
+    const balance = await sdk.getBalance(signerAddress);
     //print wallet info
     printSeparator();
-    const signerAddress = await signer.getAddress();
-    const balance = await provider.getBalance(signerAddress);
-    const roundedBalance = parseFloat(ethers.formatEther(balance)).toFixed(4);
     console.log(`Connected : ${signerAddress}`);
-    console.log(`Balance   : ${roundedBalance} ETH`);
+    console.log(`Balance   : ${balance} ETH`);
 
     //print total books info
     printSeparator();
-    let booksCount: BigInt = await contract.booksCount();
+    let booksCount: BigInt = await sdk.getBooksCount();
     //add books for interaction
     if (booksCount == BigInt(0)) {
-        const addBookTx1 = await contract.addBook("test book 1", "test author", 1);
-        await addBookTx1.wait();
-        const addBookTx2 = await contract.addBook("test book 2", "test author", 2);
-        await addBookTx2.wait();
+        await sdk.addBook("test book 1", "test author", 1);
+        await sdk.addBook("test book 2", "test author", 2)
     }
+    booksCount = await sdk.getBooksCount();
     
     //print available books
     console.log(`Total books count in library is : ${booksCount.toString()}`);
     printSeparator();
-    let availableBooks: string[] = await showAvailableBooks(contract);
+    let availableBooks: string[] = await showAvailableBooks(sdk);
     
     // borrow book
     printSeparator();
     console.log(`Borrow book with id : ${availableBooks[0]}`)
     let spinnerInterval: NodeJS.Timeout = startSpinner();
-    const borrowBookTx = await contract.borrowBook(availableBooks[0]);
-    await borrowBookTx.wait();
+    await sdk.borrowBook(availableBooks[0]);
     stopSpinner(spinnerInterval);
     
     //print available books after borrow the firs one
     printSeparator();
-    await showAvailableBooks(contract);
+    await showAvailableBooks(sdk);
     
     //print users current books
     printSeparator();
-    let currentBooks: string[] = await showUserCurrentBooks(contract, signerAddress);
+    let currentBooks: string[] = await showUserCurrentBooks(sdk, signerAddress);
     
     //return book
     printSeparator()
     console.log(`Return book with id : ${currentBooks[0]}`);
     spinnerInterval = startSpinner();
-    const returnBookTx = await contract.returnBook(currentBooks[0]);
-    await returnBookTx.wait();
+    await sdk.returnBook(currentBooks[0]);
     stopSpinner(spinnerInterval);
 
     //print available books after return
     printSeparator();
-    await showAvailableBooks(contract);
+    await showAvailableBooks(sdk);
     printSeparator();
 }
 
@@ -60,26 +57,26 @@ function printSeparator() {
     console.log('------------------------------------------------------------------------')
 }
 
-async function showAvailableBooks(contract: Contract) {
-    let availableBookIds: string[] = await contract.showAvailableBooks();
+async function showAvailableBooks(sdk: Sdk) {
+    let availableBookIds: string[] = await sdk.showAvailableBooks();
     console.log(`Available books are : `);
     await Promise.all(availableBookIds.map(async (bookId) => {
-        await printBook(contract, bookId);
+        await printBook(sdk, bookId);
     }));
     return availableBookIds;
 }
 
-async function showUserCurrentBooks(contract: Contract, userAddress: string) {
+async function showUserCurrentBooks(sdk: Sdk, userAddress: string) {
     console.log(`Current books for user with address ${userAddress} are :`);
-    let currentBooksIds: string[] = await contract.showUserCurrentBooks(userAddress);
+    let currentBooksIds: string[] = await sdk.showCurrentBooks(userAddress);
     await Promise.all(currentBooksIds.map(async (bookId) => {
-        await printBook(contract, bookId);
+        await printBook(sdk, bookId);
     }));
     return currentBooksIds;
 }
 
-async function printBook(contract: Contract, bookId: string) {
-    let book: any[] = await contract.books(bookId);
+async function printBook(sdk: Sdk, bookId: string) {
+    let book: any[] = await sdk.books(bookId);
     console.log(
         `  BookId    : ${bookId} \n  Title     : ${book[0]} \n  Author    : ${book[1]} \n  Available : ${book[2]} copies\n`
     );

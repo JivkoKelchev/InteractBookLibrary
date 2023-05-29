@@ -15,7 +15,8 @@ async function interact() {
     let contractAddress: string = "0xf071786c9Ab0585d64b0E53d7d027B3E30310324"; //contract on sepolia
     const contract = new ethers.Contract(contractAddress, compiledContractInterface.abi, signer);
     
-    await run(provider, contract, signer)
+    await run(provider, contract, signer);
+    process.exit(0);
 }
 
 interact().catch((error) => {
